@@ -1,4 +1,4 @@
-"""modulehacker module"""
+# -*- coding: utf-8 -*-
 
 
 import sys, six,imp
@@ -15,62 +15,56 @@ class Hook:
     def hack(self, module):
         return module
 
-class MetaPathFinder:
-    def __init__(self):
-        pass
-
-    def find_module(self, fullname, path=None):
-        finder = sys.meta_path.pop(0)
-        if not six.PY34:
-            fullname_arr = fullname.split('.')
-            name = fullname_arr.pop()
-            module_info, path_name, description = imp.find_module(name, path)
-            sys.meta_path.insert(0, finder)
-            if module_info is None:
-                return None
-        else:
-            module_spec = importlib.util.find_spec(fullname)
-            sys.meta_path.insert(0, finder)
-            if module_spec is None:
-                return None
-        return MetaPathLoader()
-
-
-class MetaPathLoader:
-    def __init__(self):
-        pass
-
-    def load_module(self, fullname, path=None):
-        if fullname in sys.modules:
-            return sys.modules[fullname]
-        finder = sys.meta_path.pop(0)
-        module = importlib.import_module(fullname)
-        for hacker in _hackers:
-            module = hacker.hack(module)
-        sys.meta_path.insert(0, finder)
-        #print("meta_path:", sys.meta_path)
-        return module
-
 class Loader:
+    '''
+       import导入器实现，兼容py2和py3
+    '''
     def __init__(self):
         self.module = None
 
     def find_module(self, name, path):
+        '''
+           py2和py3.4之前的查找器
+        '''
         sys.meta_path.remove(self)
         self.module = importlib.import_module(name)
         sys.meta_path.insert(0, self)
-        return self.load_module(name)
+        return self
 
     def load_module(self, name):
+        '''
+           py2和py3.4之前的加载器
+        '''
         if not self.module:
             raise ImportError("Unable to load module.")
         module = self.module
-        finder = sys.meta_path.pop(0)
         for hacker in _hackers:
             module = hacker.hack(module)
-            # print(module)
-            # print(module.__doc__)
-        sys.meta_path.insert(0, finder)
         return module
+    
+    def find_spec(self, fullname, path, target=None):
+        '''
+           py3.4之后的查找器
+        '''
+        sys.meta_path.remove(self)
+        module_spec = importlib.util.find_spec(fullname)
+        module_spec.loader = self
+        return module_spec
 
-sys.meta_path.insert(0, MetaPathFinder())
+    def create_module(self, spec):
+        '''
+           py3.4之后的创造器，用于创建模块
+        '''
+        module = importlib.import_module(spec.name)
+        sys.meta_path.insert(0, self)
+        return module or None
+
+    def exec_module (self, module):
+        '''
+           py3.4之后的执行器，用于创建模块，每次执行引入模块或者重载模块时会执行的操作
+        '''
+        for hacker in _hackers:
+            module = hacker.hack(module)
+        return module
+        
+sys.meta_path.insert(0, Loader())
