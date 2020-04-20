@@ -27,6 +27,9 @@ class Loader:
            py2和py3.4之前的查找器
         '''
         sys.meta_path.remove(self)
+        # TODO: 1. importlib和imp切换
+        # 2. sys.path_hook和sys.meta_path和sys.modules
+        # url: https://testerhome.com/articles/19261
         self.module = importlib.import_module(name)
         sys.meta_path.insert(0, self)
         return self
