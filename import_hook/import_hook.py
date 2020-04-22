@@ -73,7 +73,6 @@ class Loader:
                 module_spec = importlib.util.find_spec(fullname)
                 module_spec.loader = self
             except:
-                print(os.path.exists(file_locations))
                 sys.meta_path.insert(0, self)
                 return None
             else:
@@ -93,7 +92,6 @@ class Loader:
            py3.4之后的执行器，用于创建模块，每次执行引入模块或者重载模块时会执行的操作
         '''
         for hacker in _hackers:
-            print(hacker)
             module = hacker.hack(module)
         return module
 
