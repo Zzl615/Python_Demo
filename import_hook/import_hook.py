@@ -13,12 +13,12 @@ def register(obj):
     _hackers.append(obj)
 
 
-class Hook:
+class Hook(object):
     def hack(self, module):
         return module
 
 
-class Loader:
+class Loader(object):
     '''
        import导入器实现，兼容py2和py3
     '''
@@ -29,25 +29,30 @@ class Loader:
     def find_module(self, name, path):
         '''
            py2和py3.4之前的查找器
-        '''
+        '''      
         sys.meta_path.remove(self)
-        # TODO: 1. importlib和imp切换
-        # 2. sys.path_hook和sys.meta_path和sys.modules
-        # url: https://testerhome.com/articles/19261
-        self.module = importlib.import_module(name)
-        sys.meta_path.insert(0, self)
+        name_array = name.split('.')
+        name = name_array.pop()
+        self.module_finder, self.path_name, self.sedescription = imp.find_module(name, path)
+        if self.module_finder is None:
+            sys.meta_path.insert(0, self)
+            return None
         return self
 
     def load_module(self, name):
         '''
            py2和py3.4之前的加载器
-        '''
-        if not self.module:
-            raise ImportError("Unable to load module.")
-        module = self.module
-        for hacker in _hackers:
-            module = hacker.hack(module)
-        return module
+        '''     
+        try:
+            module_finder = imp.load_module(name, self.module_finder, self.path_name, self.sedescription)
+        except Exception as e:
+            sys.meta_path.insert(0, self)
+            print("except_load_module: %s Exception %s traceback: %s" % (name, e, traceback.print_exc()))
+        else:
+            sys.meta_path.insert(0, self)
+            for hacker in _hackers:
+                module = hacker.hack(module_finder)
+            return module
 
     def find_spec(self, fullname, path, target=None):
         '''
