@@ -5,6 +5,7 @@ import six
 import imp
 import os
 import importlib
+import traceback
 
 _hackers = []
 
@@ -58,6 +59,7 @@ class Loader(object):
         '''
            py3.4之后的查找器
         '''
+<<<<<<< HEAD
         if path is None or path == "":
             path = [os.getcwd()]  # top level import --
         if "." in fullname:
@@ -83,14 +85,32 @@ class Loader(object):
             else:
                 return module_spec
         return None  # we don't know how to import this
+=======
+        try:
+            sys.meta_path.remove(self)
+            module_spec = importlib.util.find_spec(fullname)
+            module_spec.loader = self
+        except Exception as e:
+            print("except_find_spec: %s Exception %s traceback: %s" % (fullname, e, traceback.print_exc()))
+            sys.meta_path.insert(0, self)
+            return None
+        else:
+            return module_spec
+>>>>>>> 6058ba4... Refactor: find_spec and create_module of Loader
 
     def create_module(self, spec):
         '''
            py3.4之后的创造器，用于创建模块
         '''
-        module = importlib.import_module(spec.name)
-        sys.meta_path.insert(0, self)
-        return module or None
+        try:
+            module = importlib.import_module(spec.name)
+        except Exception as e:
+            print("except_find_spec: %s Exception %s traceback: %s" % (fullname, e, traceback.print_exc()))
+            sys.meta_path.insert(0, self)
+            return None
+        else:
+            sys.meta_path.insert(0, self)
+            return module
 
     def exec_module(self, module):
         '''
