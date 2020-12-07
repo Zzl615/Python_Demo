@@ -33,5 +33,9 @@ tornado.ioloop)
 
 - [FastAPI](https://fastapi.tiangolo.com/)
 
+## 教程
+1. [Python Cookbook](https://python3-cookbook.readthedocs.io/zh_CN/latest/index.html)
+2. [语雀-Python大全](https://www.yuque.com/luobuhekeng/nmt0g0/75b8d59a7e940ccf00b239f368662add#Ck00J)
+
 ## 其他
 *args用法、数据库：postgresql =>psycopg2、连接池：DButil、PEP8规范
